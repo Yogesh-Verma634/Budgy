@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from app import db
 from models import Receipt, Item
 from receipt_processor import process_receipt
+import logging
 
 main = Blueprint('main', __name__)
 
@@ -21,32 +22,41 @@ def dashboard():
 @login_required
 def upload_receipt():
     if 'receipt' not in request.files:
+        current_app.logger.error('No file part in the request')
         return jsonify({'error': 'No file part'}), 400
     file = request.files['receipt']
     if file.filename == '':
+        current_app.logger.error('No selected file')
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        receipt_data = process_receipt(file)
-        new_receipt = Receipt(
-            user_id=current_user.id,
-            store_name=receipt_data['store_name'],
-            total_amount=receipt_data['total_amount'],
-            category=receipt_data['category']
-        )
-        db.session.add(new_receipt)
-        db.session.commit()
-
-        for item in receipt_data['items']:
-            new_item = Item(
-                receipt_id=new_receipt.id,
-                name=item['name'],
-                price=item['price'],
-                category=item['category']
+        try:
+            current_app.logger.info(f'Processing receipt: {file.filename}')
+            receipt_data = process_receipt(file)
+            current_app.logger.info(f'Receipt processed successfully: {receipt_data}')
+            
+            new_receipt = Receipt(
+                user_id=current_user.id,
+                store_name=receipt_data['store_name'],
+                total_amount=receipt_data['total_amount'],
+                category=receipt_data['category']
             )
-            db.session.add(new_item)
-        db.session.commit()
+            db.session.add(new_receipt)
+            db.session.commit()
 
-        return jsonify({'message': 'Receipt processed successfully'}), 200
+            for item in receipt_data['items']:
+                new_item = Item(
+                    receipt_id=new_receipt.id,
+                    name=item['name'],
+                    price=item['price'],
+                    category=item['category']
+                )
+                db.session.add(new_item)
+            db.session.commit()
+
+            return jsonify({'message': 'Receipt processed successfully'}), 200
+        except Exception as e:
+            current_app.logger.error(f'Error processing receipt: {str(e)}')
+            return jsonify({'error': 'Error processing receipt'}), 500
 
 @main.route('/get_expenses')
 @login_required
