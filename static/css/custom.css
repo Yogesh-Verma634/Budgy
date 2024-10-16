@@ -3,9 +3,31 @@ body {
     padding-top: 60px;
 }
 
+.navbar-brand img {
+    height: 40px;
+    width: auto;
+}
+
+.text-gold {
+    color: #FFD700;
+}
+
+.btn-primary {
+    background-color: #FFD700;
+    border-color: #FFD700;
+    color: #000;
+}
+
+.btn-primary:hover {
+    background-color: #FFC000;
+    border-color: #FFC000;
+    color: #000;
+}
+
 .expense-item {
     background-color: var(--bs-dark);
     color: var(--bs-light);
+    border: 1px solid #FFD700;
 }
 
 #chart-container {
