@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     showAlert('error', data.error);
                 } else {
                     showAlert('success', data.message);
+                    if (data.data) {
+                        displayReceiptData(data.data);
+                    }
                     loadExpenses();
                 }
             })
@@ -44,6 +47,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
+    function displayReceiptData(data) {
+        const receiptDataContainer = document.getElementById('receipt-data');
+        if (receiptDataContainer) {
+            receiptDataContainer.innerHTML = `
+                <h3>Processed Receipt Data</h3>
+                <p><strong>Store:</strong> ${data.store_name}</p>
+                <p><strong>Total Amount:</strong> $${data.total_amount.toFixed(2)}</p>
+                <p><strong>Category:</strong> ${data.category}</p>
+                <h4>Items:</h4>
+                <ul>
+                    ${data.items.map(item => `
+                        <li>${item.name} - $${item.price.toFixed(2)} (${item.category})</li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+    }
+
     function loadExpenses() {
         fetch('/get_expenses')
             .then(response => response.json())
@@ -55,7 +76,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     createChart(expenses);
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while loading expenses. Please try again.');
+            });
     }
 
     function displayExpenses(expenses) {

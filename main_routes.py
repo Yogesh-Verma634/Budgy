@@ -67,7 +67,7 @@ def upload_receipt():
                 db.session.add(new_item)
             db.session.commit()
 
-            return jsonify({'message': 'Receipt processed successfully'}), 200
+            return jsonify({'message': 'Receipt processed successfully', 'data': receipt_data}), 200
         except ValueError as e:
             current_app.logger.error(f'Error processing receipt: {str(e)}')
             return jsonify({'error': str(e)}), 400
