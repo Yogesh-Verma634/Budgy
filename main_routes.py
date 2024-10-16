@@ -88,22 +88,31 @@ def upload_receipt():
 @login_required
 def get_expenses():
     try:
-        receipts = Receipt.query.filter_by(user_id=current_user.id).all()
+        current_app.logger.info(f'Fetching expenses for user {current_user.id}')
+        receipts = Receipt.query.filter_by(user_id=current_user.id).order_by(Receipt.date.desc()).all()
+        current_app.logger.debug(f'Found {len(receipts)} receipts for user {current_user.id}')
+
         expenses = []
         for receipt in receipts:
+            current_app.logger.debug(f'Processing receipt {receipt.id}: {receipt.store_name}')
+            items = Item.query.filter_by(receipt_id=receipt.id).all()
+            current_app.logger.debug(f'Found {len(items)} items for receipt {receipt.id}')
+
             expense = {
+                'id': receipt.id,
                 'store_name': receipt.store_name,
                 'date': receipt.date.strftime('%Y-%m-%d'),
-                'total_amount': receipt.total_amount,
+                'total_amount': float(receipt.total_amount),
                 'category': receipt.category,
                 'items': [{
                     'name': item.name,
-                    'price': item.price,
+                    'price': float(item.price),
                     'category': item.category
-                } for item in receipt.items]
+                } for item in items]
             }
             expenses.append(expense)
-        current_app.logger.info(f'Retrieved {len(expenses)} expenses for user {current_user.id}')
+
+        current_app.logger.info(f'Successfully retrieved {len(expenses)} expenses for user {current_user.id}')
         return jsonify(expenses)
     except Exception as e:
         current_app.logger.error(f'Error retrieving expenses: {str(e)}')

@@ -79,6 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(expenses => {
                 console.log('Expenses loaded:', expenses);
+                if (expenses.error) {
+                    throw new Error(expenses.error);
+                }
+                if (!Array.isArray(expenses)) {
+                    throw new Error('Received data is not an array');
+                }
                 if (expensesContainer) {
                     displayExpenses(expenses);
                 }
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error loading expenses:', error);
-                showAlert('error', 'An error occurred while loading expenses. Please try again.');
+                showAlert('error', `An error occurred while loading expenses: ${error.message}`);
             });
     }
 

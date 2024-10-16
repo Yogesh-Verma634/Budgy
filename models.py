@@ -1,5 +1,6 @@
 from app import db
 from flask_login import UserMixin
+from datetime import datetime
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -12,10 +13,10 @@ class Receipt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     store_name = db.Column(db.String(100), nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     total_amount = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=False)
-    items = db.relationship('Item', backref='receipt', lazy=True)
+    items = db.relationship('Item', backref='receipt', lazy=True, cascade="all, delete-orphan")
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
