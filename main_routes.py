@@ -87,19 +87,24 @@ def upload_receipt():
 @main.route('/get_expenses')
 @login_required
 def get_expenses():
-    receipts = Receipt.query.filter_by(user_id=current_user.id).all()
-    expenses = []
-    for receipt in receipts:
-        expense = {
-            'store_name': receipt.store_name,
-            'date': receipt.date.strftime('%Y-%m-%d'),
-            'total_amount': receipt.total_amount,
-            'category': receipt.category,
-            'items': [{
-                'name': item.name,
-                'price': item.price,
-                'category': item.category
-            } for item in receipt.items]
-        }
-        expenses.append(expense)
-    return jsonify(expenses)
+    try:
+        receipts = Receipt.query.filter_by(user_id=current_user.id).all()
+        expenses = []
+        for receipt in receipts:
+            expense = {
+                'store_name': receipt.store_name,
+                'date': receipt.date.strftime('%Y-%m-%d'),
+                'total_amount': receipt.total_amount,
+                'category': receipt.category,
+                'items': [{
+                    'name': item.name,
+                    'price': item.price,
+                    'category': item.category
+                } for item in receipt.items]
+            }
+            expenses.append(expense)
+        current_app.logger.info(f'Retrieved {len(expenses)} expenses for user {current_user.id}')
+        return jsonify(expenses)
+    except Exception as e:
+        current_app.logger.error(f'Error retrieving expenses: {str(e)}')
+        return jsonify({'error': 'An error occurred while retrieving expenses'}), 500

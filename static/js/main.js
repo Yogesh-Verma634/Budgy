@@ -69,9 +69,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadExpenses() {
+        console.log('Loading expenses...');
         fetch('/get_expenses')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(expenses => {
+                console.log('Expenses loaded:', expenses);
                 if (expensesContainer) {
                     displayExpenses(expenses);
                 }
@@ -80,15 +87,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error loading expenses:', error);
                 showAlert('error', 'An error occurred while loading expenses. Please try again.');
             });
     }
 
     function displayExpenses(expenses) {
-        if (!expensesContainer) return;
+        if (!expensesContainer) {
+            console.error('Expenses container not found');
+            return;
+        }
         
+        console.log('Displaying expenses:', expenses);
         expensesContainer.innerHTML = '';
+        if (expenses.length === 0) {
+            expensesContainer.innerHTML = '<p>No expenses found.</p>';
+            return;
+        }
         expenses.forEach(expense => {
             const expenseElement = document.createElement('div');
             expenseElement.classList.add('expense-item', 'card', 'mb-3');
@@ -109,10 +124,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function createChart(expenses) {
-        if (!chartContainer) return;
+        if (!chartContainer) {
+            console.error('Chart container not found');
+            return;
+        }
 
         const ctx = document.getElementById('expenses-chart');
-        if (!ctx) return;
+        if (!ctx) {
+            console.error('Expenses chart canvas not found');
+            return;
+        }
 
         const ctxCanvas = ctx.getContext('2d');
         
@@ -122,6 +143,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return expenses.filter(e => e.category === category)
                            .reduce((sum, e) => sum + e.total_amount, 0);
         });
+
+        console.log('Creating chart with data:', { categories, data });
 
         new Chart(ctxCanvas, {
             type: 'doughnut',
@@ -156,6 +179,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load expenses on page load if the container exists
     if (expensesContainer || chartContainer) {
+        console.log('Initializing expense loading...');
         loadExpenses();
+    } else {
+        console.log('Expenses or chart container not found. Current page might not require expense data.');
     }
 });
