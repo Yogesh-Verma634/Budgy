@@ -18,7 +18,7 @@ def process_receipt(file):
         
         # Open the image using PIL
         with Image.open(io.BytesIO(file_content)) as img:
-            logging.debug(f"Image opened. Mode: {img.mode}, Size: {img.size}")
+            logging.debug(f"Image opened. Mode: {img.mode}, Size: {img.size}, Format: {img.format}")
             
             # Convert image to RGB mode if it's not already
             if img.mode != 'RGB':

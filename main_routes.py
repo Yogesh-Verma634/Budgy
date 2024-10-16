@@ -35,12 +35,19 @@ def upload_receipt():
         # Check if the file is an allowed image type
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
         file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        
+        current_app.logger.debug(f"File extension: {file_extension}")
+        
         if file_extension not in allowed_extensions:
+            current_app.logger.error(f"Invalid file extension: {file_extension}")
             return jsonify({'error': 'Invalid file type. Please upload an image (PNG, JPG, JPEG, or GIF).'}), 400
 
         # Check the MIME type of the file
         mime_type = mimetypes.guess_type(file.filename)[0]
+        current_app.logger.debug(f"MIME type: {mime_type}")
+        
         if not mime_type or not mime_type.startswith('image/'):
+            current_app.logger.error(f"Invalid MIME type: {mime_type}")
             return jsonify({'error': 'Invalid file type. Please upload a valid image file.'}), 400
 
         try:
