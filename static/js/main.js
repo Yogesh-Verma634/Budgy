@@ -3,28 +3,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const expensesContainer = document.getElementById('expenses-container');
     const chartContainer = document.getElementById('chart-container');
 
-    uploadForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(uploadForm);
-        
-        fetch('/upload_receipt', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            loadExpenses();
-        })
-        .catch(error => console.error('Error:', error));
-    });
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(uploadForm);
+            
+            fetch('/upload_receipt', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadExpenses();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
 
     function loadExpenses() {
         fetch('/get_expenses')
             .then(response => response.json())
             .then(expenses => {
-                displayExpenses(expenses);
-                createChart(expenses);
+                if (expensesContainer) {
+                    displayExpenses(expenses);
+                }
+                if (chartContainer) {
+                    createChart(expenses);
+                }
             })
             .catch(error => console.error('Error:', error));
     }
@@ -83,6 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Load expenses on page load
-    loadExpenses();
+    // Load expenses on page load if the container exists
+    if (expensesContainer || chartContainer) {
+        loadExpenses();
+    }
 });
