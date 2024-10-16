@@ -68,9 +68,12 @@ def upload_receipt():
             db.session.commit()
 
             return jsonify({'message': 'Receipt processed successfully'}), 200
-        except Exception as e:
+        except ValueError as e:
             current_app.logger.error(f'Error processing receipt: {str(e)}')
-            return jsonify({'error': 'An error occurred while processing the receipt. Please try again or contact support.'}), 500
+            return jsonify({'error': str(e)}), 400
+        except Exception as e:
+            current_app.logger.error(f'Unexpected error processing receipt: {str(e)}')
+            return jsonify({'error': 'An unexpected error occurred. Please try again or contact support.'}), 500
 
 @main.route('/get_expenses')
 @login_required

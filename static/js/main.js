@@ -15,17 +15,33 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    alert('Error: ' + data.error);
+                    showAlert('error', data.error);
                 } else {
-                    alert(data.message);
+                    showAlert('success', data.message);
                     loadExpenses();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while uploading the receipt. Please try again.');
+                showAlert('error', 'An error occurred while uploading the receipt. Please try again.');
             });
         });
+    }
+
+    function showAlert(type, message) {
+        const alertContainer = document.createElement('div');
+        alertContainer.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+        alertContainer.role = 'alert';
+        alertContainer.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector('.container').insertBefore(alertContainer, document.querySelector('.container').firstChild);
+        
+        // Auto-dismiss the alert after 5 seconds
+        setTimeout(() => {
+            alertContainer.remove();
+        }, 5000);
     }
 
     function loadExpenses() {

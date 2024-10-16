@@ -3,19 +3,25 @@ from PIL import Image
 import re
 import logging
 import os
+import io
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def process_receipt(file):
     try:
-        # Save the uploaded file temporarily
-        temp_path = "temp_receipt.png"
-        file.save(temp_path)
-        logging.info(f"Saved temporary file: {temp_path}")
-
-        # Use Tesseract OCR to extract text from the image
-        text = pytesseract.image_to_string(Image.open(temp_path))
+        # Read the file content
+        file_content = file.read()
+        
+        # Open the image using PIL
+        with Image.open(io.BytesIO(file_content)) as img:
+            # Convert image to RGB mode if it's not already
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Use Tesseract OCR to extract text from the image
+            text = pytesseract.image_to_string(img)
+        
         logging.info("Successfully extracted text from image")
 
         # Process the extracted text
@@ -42,19 +48,21 @@ def process_receipt(file):
         category = determine_overall_category(items)
         logging.info(f"Determined overall category: {category}")
 
-        # Clean up temporary file
-        os.remove(temp_path)
-        logging.info(f"Removed temporary file: {temp_path}")
-
         return {
             'store_name': store_name,
             'items': items,
             'total_amount': total_amount,
             'category': category
         }
+    except IOError as e:
+        logging.error(f"Error opening or processing the image: {str(e)}")
+        raise ValueError("Unable to open or process the image. Please ensure it's a valid image file.")
+    except pytesseract.TesseractError as e:
+        logging.error(f"Tesseract OCR error: {str(e)}")
+        raise ValueError("Error in text recognition. Please try uploading a clearer image.")
     except Exception as e:
-        logging.error(f"Error processing receipt: {str(e)}")
-        raise
+        logging.error(f"Unexpected error processing receipt: {str(e)}")
+        raise ValueError("An unexpected error occurred while processing the receipt. Please try again or contact support.")
 
 def categorize_item(item_name):
     # Improved categorization logic
