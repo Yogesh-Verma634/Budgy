@@ -14,10 +14,17 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
-                loadExpenses();
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadExpenses();
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while uploading the receipt. Please try again.');
+            });
         });
     }
 
@@ -36,25 +43,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function displayExpenses(expenses) {
+        if (!expensesContainer) return;
+        
         expensesContainer.innerHTML = '';
         expenses.forEach(expense => {
             const expenseElement = document.createElement('div');
-            expenseElement.classList.add('expense-item', 'mb-3', 'p-3', 'border', 'rounded');
+            expenseElement.classList.add('expense-item', 'card', 'mb-3');
             expenseElement.innerHTML = `
-                <h5>${expense.store_name}</h5>
-                <p>Date: ${expense.date}</p>
-                <p>Total: $${expense.total_amount.toFixed(2)}</p>
-                <p>Category: ${expense.category}</p>
-                <h6>Items:</h6>
-                <ul>
-                    ${expense.items.map(item => `<li>${item.name} - $${item.price.toFixed(2)} (${item.category})</li>`).join('')}
-                </ul>
+                <div class="card-body">
+                    <h5 class="card-title">${expense.store_name}</h5>
+                    <p class="card-text">Date: ${expense.date}</p>
+                    <p class="card-text">Total: $${expense.total_amount.toFixed(2)}</p>
+                    <p class="card-text">Category: ${expense.category}</p>
+                    <h6 class="card-subtitle mb-2 text-muted">Items:</h6>
+                    <ul class="list-group list-group-flush">
+                        ${expense.items.map(item => `<li class="list-group-item">${item.name} - $${item.price.toFixed(2)} (${item.category})</li>`).join('')}
+                    </ul>
+                </div>
             `;
             expensesContainer.appendChild(expenseElement);
         });
     }
 
     function createChart(expenses) {
+        if (!chartContainer) return;
+
         const ctx = document.getElementById('expenses-chart').getContext('2d');
         
         // Prepare data for chart
@@ -65,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: categories,
                 datasets: [{
@@ -81,9 +94,15 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             options: {
                 responsive: true,
-                title: {
-                    display: true,
-                    text: 'Expenses by Category'
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Expenses by Category'
+                    }
                 }
             }
         });

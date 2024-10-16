@@ -4,6 +4,7 @@ from app import db
 from models import Receipt, Item
 from receipt_processor import process_receipt
 import logging
+import mimetypes
 
 main = Blueprint('main', __name__)
 
@@ -23,12 +24,25 @@ def dashboard():
 def upload_receipt():
     if 'receipt' not in request.files:
         current_app.logger.error('No file part in the request')
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify({'error': 'No file uploaded. Please select an image.'}), 400
+
     file = request.files['receipt']
     if file.filename == '':
         current_app.logger.error('No selected file')
-        return jsonify({'error': 'No selected file'}), 400
+        return jsonify({'error': 'No file selected. Please choose an image.'}), 400
+
     if file:
+        # Check if the file is an allowed image type
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+        file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        if file_extension not in allowed_extensions:
+            return jsonify({'error': 'Invalid file type. Please upload an image (PNG, JPG, JPEG, or GIF).'}), 400
+
+        # Check the MIME type of the file
+        mime_type = mimetypes.guess_type(file.filename)[0]
+        if not mime_type or not mime_type.startswith('image/'):
+            return jsonify({'error': 'Invalid file type. Please upload a valid image file.'}), 400
+
         try:
             current_app.logger.info(f'Processing receipt: {file.filename}')
             receipt_data = process_receipt(file)
@@ -56,7 +70,7 @@ def upload_receipt():
             return jsonify({'message': 'Receipt processed successfully'}), 200
         except Exception as e:
             current_app.logger.error(f'Error processing receipt: {str(e)}')
-            return jsonify({'error': 'Error processing receipt'}), 500
+            return jsonify({'error': 'An error occurred while processing the receipt. Please try again or contact support.'}), 500
 
 @main.route('/get_expenses')
 @login_required
