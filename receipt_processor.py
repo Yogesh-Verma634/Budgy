@@ -1,11 +1,19 @@
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 import re
 import logging
 import io
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def enhance_image(img):
+    logging.debug("Enhancing image")
+    img = img.convert('L')  # Convert to grayscale
+    img = img.filter(ImageFilter.MedianFilter())  # Apply a median filter
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(2)  # Increase contrast
+    return img
 
 def process_receipt(file):
     try:
@@ -24,9 +32,14 @@ def process_receipt(file):
                 logging.debug(f"Converting image from {img.mode} to RGB")
                 img = img.convert('RGB')
             
+            # Enhance image
+            img = enhance_image(img)
+            logging.debug("Image enhanced")
+            
             # Use Tesseract OCR to extract text from the image
             logging.debug("Starting OCR text extraction")
-            text = pytesseract.image_to_string(img)
+            custom_config = r'--oem 3 --psm 6'
+            text = pytesseract.image_to_string(img, config=custom_config)
             logging.debug(f"OCR extraction completed. Extracted text length: {len(text)}")
         
         # Process the extracted text
@@ -34,7 +47,7 @@ def process_receipt(file):
         logging.debug(f"Text split into {len(lines)} lines")
         
         # Extract store name (assuming it's the first line)
-        store_name = lines[0].strip()
+        store_name = lines[0].strip() if lines else "Unknown Store"
         logging.debug(f"Extracted store name: {store_name}")
 
         # Extract items and prices
