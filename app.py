@@ -8,17 +8,20 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
-db.init_app(app)
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+    db.init_app(app)
 
-with app.app_context():
-    import models
-    db.create_all()
+    from auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
 
-import routes
+    from main_routes import main as main_blueprint
+    app.register_blueprint(main_blueprint)
+
+    return app
