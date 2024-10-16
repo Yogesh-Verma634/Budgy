@@ -39,12 +39,15 @@ document.addEventListener('DOMContentLoaded', function() {
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
-        document.querySelector('.container').insertBefore(alertContainer, document.querySelector('.container').firstChild);
-        
-        // Auto-dismiss the alert after 5 seconds
-        setTimeout(() => {
-            alertContainer.remove();
-        }, 5000);
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertBefore(alertContainer, container.firstChild);
+            
+            // Auto-dismiss the alert after 5 seconds
+            setTimeout(() => {
+                alertContainer.remove();
+            }, 5000);
+        }
     }
 
     function displayReceiptData(data) {
@@ -108,7 +111,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function createChart(expenses) {
         if (!chartContainer) return;
 
-        const ctx = document.getElementById('expenses-chart').getContext('2d');
+        const ctx = document.getElementById('expenses-chart');
+        if (!ctx) return;
+
+        const ctxCanvas = ctx.getContext('2d');
         
         // Prepare data for chart
         const categories = [...new Set(expenses.map(e => e.category))];
@@ -117,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                            .reduce((sum, e) => sum + e.total_amount, 0);
         });
 
-        new Chart(ctx, {
+        new Chart(ctxCanvas, {
             type: 'doughnut',
             data: {
                 labels: categories,
