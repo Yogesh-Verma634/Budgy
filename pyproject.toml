@@ -11,4 +11,5 @@ dependencies = [
     "pytesseract>=0.3.13",
     "pillow>=11.0.0",
     "pandas>=2.2.3",
+    "flask-login>=0.6.3",
 ]

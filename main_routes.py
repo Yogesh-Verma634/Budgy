@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask_login import login_required, current_user
 from app import db
 from models import Receipt, Item
 from receipt_processor import process_receipt
@@ -10,10 +11,12 @@ def index():
     return render_template('index.html')
 
 @main.route('/dashboard')
+@login_required
 def dashboard():
     return render_template('dashboard.html')
 
 @main.route('/upload_receipt', methods=['POST'])
+@login_required
 def upload_receipt():
     if 'receipt' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -23,7 +26,7 @@ def upload_receipt():
     if file:
         receipt_data = process_receipt(file)
         new_receipt = Receipt(
-            user_id=1,  # Replace with actual user ID in a real application
+            user_id=current_user.id,
             store_name=receipt_data['store_name'],
             total_amount=receipt_data['total_amount'],
             category=receipt_data['category']
@@ -44,8 +47,9 @@ def upload_receipt():
         return jsonify({'message': 'Receipt processed successfully'}), 200
 
 @main.route('/get_expenses')
+@login_required
 def get_expenses():
-    receipts = Receipt.query.all()
+    receipts = Receipt.query.filter_by(user_id=current_user.id).all()
     expenses = []
     for receipt in receipts:
         expense = {

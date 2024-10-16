@@ -1,4 +1,5 @@
 from flask import render_template, request, flash, redirect, url_for
+from flask_login import login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from models import User
@@ -25,7 +26,15 @@ def login():
         data = request.form
         user = User.query.filter_by(username=data['username']).first()
         if user and check_password_hash(user.password_hash, data['password']):
+            login_user(user)
             flash('Logged in successfully.', 'success')
             return redirect(url_for('main.dashboard'))
         flash('Invalid username or password.', 'error')
     return render_template('auth/login.html')
+
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('main.index'))
