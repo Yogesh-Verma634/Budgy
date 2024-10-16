@@ -2,7 +2,6 @@ import pytesseract
 from PIL import Image
 import re
 import logging
-import os
 import io
 
 # Configure logging

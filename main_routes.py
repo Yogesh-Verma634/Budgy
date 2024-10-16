@@ -5,6 +5,8 @@ from models import Receipt, Item
 from receipt_processor import process_receipt
 import logging
 import mimetypes
+from werkzeug.utils import secure_filename
+import os
 
 main = Blueprint('main', __name__)
 
@@ -32,26 +34,26 @@ def upload_receipt():
         return jsonify({'error': 'No file selected. Please choose an image.'}), 400
 
     if file:
-        # Check if the file is an allowed image type
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
-        file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        filename = secure_filename(file.filename)
+        file_extension = os.path.splitext(filename)[1].lower()
         
         current_app.logger.debug(f"File extension: {file_extension}")
         
+        allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif'}
         if file_extension not in allowed_extensions:
             current_app.logger.error(f"Invalid file extension: {file_extension}")
-            return jsonify({'error': 'Invalid file type. Please upload an image (PNG, JPG, JPEG, or GIF).'}), 400
+            return jsonify({'error': f'Invalid file type: {file_extension}. Please upload an image (PNG, JPG, JPEG, or GIF).'}), 400
 
         # Check the MIME type of the file
-        mime_type = mimetypes.guess_type(file.filename)[0]
+        mime_type = mimetypes.guess_type(filename)[0]
         current_app.logger.debug(f"MIME type: {mime_type}")
         
         if not mime_type or not mime_type.startswith('image/'):
             current_app.logger.error(f"Invalid MIME type: {mime_type}")
-            return jsonify({'error': 'Invalid file type. Please upload a valid image file.'}), 400
+            return jsonify({'error': f'Invalid file type: {mime_type}. Please upload a valid image file.'}), 400
 
         try:
-            current_app.logger.info(f'Processing receipt: {file.filename}')
+            current_app.logger.info(f'Processing receipt: {filename}')
             receipt_data = process_receipt(file)
             current_app.logger.info(f'Receipt processed successfully: {receipt_data}')
             
